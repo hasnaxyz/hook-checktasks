@@ -1,0 +1,26 @@
+{
+  "name": "@hasnaxyz/hook-checktasks",
+  "version": "1.0.0",
+  "description": "Claude Code hook that prevents stopping when there are pending tasks",
+  "main": "check-tasks.ts",
+  "scripts": {
+    "install:global": "./install.sh --global",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "claude-code",
+    "hook",
+    "tasks",
+    "automation"
+  ],
+  "author": "Hasna",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hasnaxyz/hook-checktasks.git"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  }
+}
