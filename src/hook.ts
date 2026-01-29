@@ -268,21 +268,31 @@ export function run() {
     const prompt = `
 STOP BLOCKED: You have ${remainingCount} tasks remaining${listInfo} (${allPending.length} pending, ${allInProgress.length} in progress, ${allCompleted.length} completed).
 
-You MUST continue working. Do NOT stop until all tasks are completed.
+⛔ DO NOT STOP. DO NOT ASK QUESTIONS. DO NOT WAIT FOR USER INPUT.
+
+You MUST continue working AUTONOMOUSLY until ALL tasks are completed.
 
 Next pending tasks:
 ${nextTasks}
 ${allPending.length > 3 ? `... and ${allPending.length - 3} more pending tasks` : ""}
 
-INSTRUCTIONS:
+MANDATORY INSTRUCTIONS (follow these NOW):
 1. Use TaskList to see all tasks
-2. Pick the next pending task
-3. Use TaskUpdate to mark it as in_progress
-4. Complete the task
-5. Use TaskUpdate to mark it as completed
-6. Repeat until all tasks are done
+2. Use TaskGet to read the FIRST pending task's full description
+3. Use TaskUpdate to mark it as in_progress BEFORE starting work
+4. Complete the task (write code, run commands, etc.)
+5. Use TaskUpdate to mark it as completed AFTER finishing
+6. IMMEDIATELY move to the next task - DO NOT STOP
 
-DO NOT STOP. Continue working now.
+CRITICAL RULES:
+- NEVER ask "would you like me to..." - just DO IT
+- NEVER ask for confirmation - just WORK
+- NEVER stop to explain what you'll do - just DO IT
+- If a task is unclear, make reasonable assumptions and proceed
+- If you encounter an error, fix it and continue
+- Keep working until remainingCount = 0
+
+START WORKING NOW. Use TaskList tool in your next response.
 `.trim();
 
     block(prompt);

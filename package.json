@@ -1,6 +1,6 @@
 {
   "name": "@hasnaxyz/hook-checktasks",
-  "version": "0.2.4",
+  "version": "1.0.1",
   "description": "Claude Code hook that prevents stopping when there are pending tasks",
   "type": "module",
   "bin": {
