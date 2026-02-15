@@ -5,12 +5,13 @@
  *
  * Prevents Claude from stopping when there are pending/in-progress tasks.
  *
- * Configuration priority:
- * 1. settings.json checkTasksConfig (project or global)
- * 2. Environment variables (legacy)
+ * Task list resolution priority:
+ * 1. taskListId set in config (settings.json) → use that specific list
+ * 2. CLAUDE_CODE_TASK_LIST_ID env var → auto-set by Claude Code per-session
+ * 3. cwd-based project detection → match working directory against named task lists
  *
  * Config options:
- * - taskListId: specific list to check, or undefined = auto-detect for current project
+ * - taskListId: specific list to check, or undefined = auto-detect
  * - keywords: keywords to match task list names (default: ["dev"])
  * - enabled: enable/disable the hook
  */
@@ -256,6 +257,9 @@ export function run() {
   if (config.taskListId) {
     // Specific list configured - only check that one
     listsToCheck = [config.taskListId];
+  } else if (process.env.CLAUDE_CODE_TASK_LIST_ID) {
+    // Claude Code sets this env var per-session with the exact task list ID
+    listsToCheck = [process.env.CLAUDE_CODE_TASK_LIST_ID];
   } else {
     // Auto-detect: find task lists that belong to this project
     const projectLists = getProjectTaskLists(cwd);

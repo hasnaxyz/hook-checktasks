@@ -10,6 +10,8 @@ This hook intercepts Claude's "Stop" event and:
 2. If tasks remain → **blocks the stop** and prompts Claude to continue
 3. If all complete → allows stop
 
+**Zero config required.** Claude Code automatically sets the `CLAUDE_CODE_TASK_LIST_ID` environment variable with the correct task list ID for each session. The hook reads this automatically, so it just works out of the box -- no manual configuration needed.
+
 ## Installation
 
 ### 1. Install the CLI globally
@@ -90,7 +92,17 @@ Configuration is stored in `.claude/settings.json`:
 | `keywords` | Keywords to match in session/list names | `["dev"]` |
 | `enabled` | Enable/disable the hook | `true` |
 
-### Priority
+### Task List Resolution Priority
+
+The hook determines which task list to check in this order:
+
+1. **`taskListId` in config** -- if explicitly set in settings.json, use that
+2. **`CLAUDE_CODE_TASK_LIST_ID` env var** -- Claude Code automatically sets this per-session with the exact task list ID (e.g., `platform-alumia-dev`). No manual setup needed.
+3. **cwd-based project detection** -- matches your working directory against named task lists
+
+In most cases, step 2 handles everything automatically.
+
+### Config Priority
 
 1. Project settings (`.claude/settings.json`)
 2. Global settings (`~/.claude/settings.json`)
@@ -101,7 +113,6 @@ Configuration is stored in `.claude/settings.json`:
 Still supported for backwards compatibility:
 
 ```bash
-CLAUDE_CODE_TASK_LIST_ID=myproject-dev claude
 CHECK_TASKS_KEYWORDS=dev,sprint claude
 CHECK_TASKS_DISABLED=1 claude
 ```
@@ -132,7 +143,13 @@ Claude tries to stop
     Read config from settings.json
         │
         ▼
-    Check matching task lists
+    Resolve task list:
+      1. taskListId in config?  → use that
+      2. CLAUDE_CODE_TASK_LIST_ID env var?  → use that (auto, zero config)
+      3. else → match cwd against named task lists
+        │
+        ▼
+    Check tasks in resolved list
         │
         ├── Tasks remaining → BLOCK stop, prompt to continue
         │
