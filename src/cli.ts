@@ -182,29 +182,69 @@ function getAllTaskLists(): string[] {
   }
 }
 
+/**
+ * Extract meaningful name segments from a project path for matching against task list names.
+ * Skips generic directory names like "Workspace", "platform", etc.
+ */
+function getProjectIdentifiers(projectPath: string): string[] {
+  const genericSegments = new Set([
+    "users", "home", "workspace", "workspaces", "projects", "repos",
+    "src", "lib", "app", "apps", "packages", "platform", "service",
+    "services", "web", "api", "server", "client", "frontend", "backend",
+    "dev", "development", "prod", "staging", "tmp", "temp", "var",
+    "opt", "usr", "volumes",
+  ]);
+
+  const segments = projectPath.split("/").filter(Boolean);
+  const identifiers: string[] = [];
+
+  for (let i = segments.length - 1; i >= 0; i--) {
+    const seg = segments[i];
+    if (seg.length < 3) continue;
+    if (genericSegments.has(seg.toLowerCase())) continue;
+    if (i <= 2) continue;
+    identifiers.push(seg);
+  }
+
+  return identifiers;
+}
+
 function getProjectTaskLists(projectPath: string): string[] {
   const allLists = getAllTaskLists();
+  const identifiers = getProjectIdentifiers(projectPath);
 
-  // Get the directory name as project identifier
-  const dirName = projectPath.split("/").filter(Boolean).pop() || "";
+  // Only consider named task lists (skip UUIDs)
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const namedLists = allLists.filter((list) => !uuidRegex.test(list));
 
-  // Filter lists that match the project name
-  // Match patterns like: project-dev, project-plan, project-bugfixes, etc.
-  const projectLists = allLists.filter((list) => {
+  if (namedLists.length === 0 || identifiers.length === 0) return [];
+
+  const scored: Array<{ list: string; score: number }> = [];
+
+  for (const list of namedLists) {
     const listLower = list.toLowerCase();
-    const dirLower = dirName.toLowerCase();
+    let bestScore = 0;
 
-    // Exact prefix match (e.g., "connect-x" matches "connect-x-dev")
-    if (listLower.startsWith(dirLower + "-")) return true;
+    for (let i = 0; i < identifiers.length; i++) {
+      const idLower = identifiers[i].toLowerCase();
+      const priorityWeight = identifiers.length - i;
 
-    // Also match if the list contains the dir name as a segment
-    // e.g., "iapp-copypine-dev" matches if we're in "iapp-copypine"
-    if (listLower.includes(dirLower)) return true;
+      if (listLower === idLower) {
+        bestScore = Math.max(bestScore, priorityWeight * 100);
+      } else if (listLower.startsWith(idLower + "-")) {
+        bestScore = Math.max(bestScore, priorityWeight * 10);
+      } else if (listLower.includes(idLower)) {
+        bestScore = Math.max(bestScore, priorityWeight * 1);
+      }
+    }
 
-    return false;
-  });
+    if (bestScore > 0) {
+      scored.push({ list, score: bestScore });
+    }
+  }
 
-  return projectLists;
+  scored.sort((a, b) => b.score - a.score);
+  return scored.map((s) => s.list);
 }
 
 interface InstallOptions {
